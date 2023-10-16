@@ -16,4 +16,7 @@
     </string>
     <string name="attachment_summary_off">Only download attachments when manually requested</string>
     <string name="hello_world">Hello, World!</string>
+    <string name="voice_notes">Voice Notes</string>
+    <string name="Button_Plus">+</string>
+    <string name="menu_name">Меню</string>
 </resources>
