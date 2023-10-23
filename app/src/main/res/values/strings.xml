@@ -19,4 +19,9 @@
     <string name="voice_notes">Voice Notes</string>
     <string name="Button_Plus">+</string>
     <string name="menu_name">Меню</string>
+
+    <string name="open_nav">Open Navigator Drawer</string>
+    <string name="close_nav">Close Navigator Drawer</string>
+
+    <string name="folder_notes_fragment">Заметки конкретной папки</string>
 </resources>
