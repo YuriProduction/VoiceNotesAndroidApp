@@ -27,7 +27,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             // Создать поле ввода текста
             val input = EditText(this)
             input.inputType = InputType.TYPE_CLASS_TEXT
-            input.filters = arrayOf(InputFilter.LengthFilter(40)) // Максимальная длина 40 символов
+            input.filters = arrayOf(InputFilter.LengthFilter(40))
             builder.setView(input)
             // Установить кнопку "Отмена"
             builder.setNegativeButton("Отмена") { dialog, _ ->
