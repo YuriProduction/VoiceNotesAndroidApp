@@ -11,13 +11,28 @@
         android:id="@+id/textView"
         android:layout_width="250dp"
         android:layout_height="24dp"
-        android:layout_marginStart="80dp"
-        android:layout_marginTop="300dp"
+        android:layout_marginStart="68dp"
+        android:layout_marginTop="80dp"
         android:background="#0E1209"
-        android:text="Запишите голосовое сообщение!"
+        android:text="@string/MessageToUserOnVoiceActivity"
         android:textSize="16sp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
+
+    <org.romancha.playpause.PlayPauseView
+        android:id="@+id/play_pause_view"
+        android:layout_width="142dp"
+        android:layout_height="108dp"
+        android:layout_marginStart="148dp"
+        android:layout_marginTop="260dp"
+        android:clickable="true"
+        android:focusable="true"
+        android:foreground="?android:selectableItemBackground"
+        app:fill_color="#e1e1e1"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:pause_bg="#00a2ed"
+        app:play_bg="#001eff" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>
