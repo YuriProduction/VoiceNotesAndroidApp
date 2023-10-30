@@ -9,9 +9,6 @@ import androidx.appcompat.app.AppCompatActivity
 import org.romancha.playpause.PlayPauseView
 
 class VoiceActivity : AppCompatActivity() {
-    private val RQS_RECORDING = 1
-    private var savedUri: Uri? = null
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.voice_activity)
@@ -19,6 +16,14 @@ class VoiceActivity : AppCompatActivity() {
         playPauseView.setOnClickListener {
             // View clicked
             playPauseView.toggle()
+            if (playPauseView.onPlaying())
+            {
+                //TODO - начать записывать аудиозапись
+            }
+            else
+            {
+                //TODO - Реализовать логику добавления в ФС аудиозаписи
+            }
         }
     }
 
