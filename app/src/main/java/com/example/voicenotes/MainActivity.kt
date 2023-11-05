@@ -37,7 +37,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
         val toolbar = findViewById<Toolbar>(R.id.toolbar)
         setSupportActionBar(toolbar)
-        supportActionBar?.title = "Название папки"
+        supportActionBar?.title = "Работа"
 
         val drawerLayout = findViewById<DrawerLayout>(R.id.drawer_layout)
         val navigationView = findViewById<NavigationView>(R.id.nav_view)
@@ -51,6 +51,9 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
+        //надо создать связь между заметками и папками, куда они добавляются
+        //Навреное добавлять в mainLayout не оч хорошо, так как в текущей реализации
+        //он общий для всех папок
         if (requestCode == REQUEST_CODE_VOICE_ACTIVITY && resultCode == RESULT_OK) {
             val newItemText = data?.getStringExtra("new_item_text")
             val noteItemContent = LinearLayout(this)
@@ -81,6 +84,9 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             )
             rightButton.gravity = Gravity.END
             rightButton.setBackgroundColor(Color.WHITE)
+            rightButton.setOnClickListener {
+                mainLayout.removeView(noteItemContent)
+            }
 
             // Create the title in the middle
             val titleTextView = TextView(this)
@@ -107,6 +113,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             R.id.nav_root_folder -> {
                 supportFragmentManager.beginTransaction()
                     .replace(R.id.fragment_container, FolderNotesFragment()).commit()
+                //Надо выгрузить все аудиозаметки
                 return true
             }
 
@@ -146,10 +153,8 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                     // Передать данные, если необходимо
                     intent.putExtra("folderTitle", enteredText)
                 }
-
                 // Показать диалоговое окно
                 builder.create().show()
-
                 return true
             }
 
