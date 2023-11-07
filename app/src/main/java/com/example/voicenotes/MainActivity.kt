@@ -16,8 +16,8 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import androidx.drawerlayout.widget.DrawerLayout
-import androidx.recyclerview.widget.RecyclerView.Orientation
 import com.google.android.material.navigation.NavigationView
+import java.io.File
 
 
 class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener {
@@ -108,6 +108,13 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         }
     }
 
+    private fun createFolder(folderName: String): Boolean {
+        val storageDir = getExternalFilesDir(null)
+        val newFolder = File(storageDir, folderName)
+
+        return newFolder.exists() && newFolder.mkdirs();
+    }
+
     override fun onNavigationItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             R.id.nav_root_folder -> {
@@ -130,31 +137,43 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             }
 
             R.id.nav_add_folder -> {
-                val builder = AlertDialog.Builder(this)
-                builder.setTitle("Введите название папки")
+                val builderCreateFolder = AlertDialog.Builder(this)
+                builderCreateFolder.setTitle("Введите название папки")
 
                 // Создать поле ввода текста
                 val input = EditText(this)
                 input.inputType = InputType.TYPE_CLASS_TEXT
                 input.filters =
                     arrayOf(InputFilter.LengthFilter(40)) // Максимальная длина 40 символов
-                builder.setView(input)
+                builderCreateFolder.setView(input)
 
                 // Установить кнопку "Отмена"
-                builder.setNegativeButton("Отмена") { dialog, _ ->
-                    dialog.cancel()
+                builderCreateFolder.setNegativeButton("Отмена") { dialogCreateFolder, _ ->
+                    dialogCreateFolder.cancel()
                 }
 
-                // Установить кнопку "Ок"
-                builder.setPositiveButton("Ок") { dialog, _ ->
-                    val enteredText = input.text.toString()
-                    dialog.dismiss()
-                    val intent = Intent(this, VoiceActivity::class.java)
-                    // Передать данные, если необходимо
-                    intent.putExtra("folderTitle", enteredText)
-                }
+                // Установить кнопку "Ок" без закрытия окна
+                builderCreateFolder.setPositiveButton("Ок", null)
+
                 // Показать диалоговое окно
-                builder.create().show()
+                val dialogCreateFolder = builderCreateFolder.create()
+                dialogCreateFolder.show()
+
+                // Получить ссылку на кнопку "Ок" и установить слушатель
+                val okButton = dialogCreateFolder.getButton(AlertDialog.BUTTON_POSITIVE)
+                okButton.setOnClickListener {
+                    val folderName = input.text.toString()
+                    if (createFolder(folderName)) {
+                        dialogCreateFolder.dismiss()
+                    } else {
+                        val builderExistFolder = AlertDialog.Builder(this)
+                        builderExistFolder.setTitle("Папка с таким названием уже существует!")
+                        builderExistFolder.setNeutralButton("Ок") { dialogExistFolder, _ ->
+                            dialogExistFolder.dismiss()
+                        }
+                        builderExistFolder.create().show()
+                    }
+                }
                 return true
             }
 
