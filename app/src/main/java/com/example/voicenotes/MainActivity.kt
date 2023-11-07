@@ -23,6 +23,7 @@ import java.io.File
 class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener {
     private lateinit var mainLayout: LinearLayout // Reference to your main vertical LinearLayout
     private val REQUEST_CODE_VOICE_ACTIVITY = 1
+    private var currentFolderName = "DefaultFolder"
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -37,7 +38,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
         val toolbar = findViewById<Toolbar>(R.id.toolbar)
         setSupportActionBar(toolbar)
-        supportActionBar?.title = "Работа"
+        supportActionBar?.title = currentFolderName
 
         val drawerLayout = findViewById<DrawerLayout>(R.id.drawer_layout)
         val navigationView = findViewById<NavigationView>(R.id.nav_view)
@@ -49,62 +50,66 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         toggle.syncState()
     }
 
+    private fun addNoteInMainLayout(noteName: String?) {
+        val noteItemContent = LinearLayout(this)
+        noteItemContent.orientation = LinearLayout.HORIZONTAL
+        noteItemContent.layoutParams = LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT,
+            LinearLayout.LayoutParams.WRAP_CONTENT
+        )
+
+        // Create a button on the left
+        val leftButton = Button(this)
+        leftButton.text = "▶️";
+        leftButton.layoutParams = LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.WRAP_CONTENT,
+            LinearLayout.LayoutParams.WRAP_CONTENT,
+            0f
+        )
+        leftButton.gravity = Gravity.START
+        leftButton.setBackgroundColor(Color.WHITE)
+
+        // Create a button on the right
+        val rightButton = Button(this)
+        rightButton.text = "❌"
+        rightButton.layoutParams = LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.WRAP_CONTENT,
+            LinearLayout.LayoutParams.WRAP_CONTENT,
+            0f
+        )
+        rightButton.gravity = Gravity.END
+        rightButton.setBackgroundColor(Color.WHITE)
+        rightButton.setOnClickListener {
+            mainLayout.removeView(noteItemContent)
+        }
+
+        // Create the title in the middle
+        val titleTextView = TextView(this)
+        titleTextView.text = noteName
+        titleTextView.layoutParams = LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.WRAP_CONTENT,
+            LinearLayout.LayoutParams.WRAP_CONTENT,
+            1f
+        )
+        titleTextView.setTextColor(Color.BLACK)
+        titleTextView.gravity = Gravity.CENTER
+
+        // Add the views to the horizontal layout
+        noteItemContent.addView(leftButton)
+        noteItemContent.addView(titleTextView)
+        noteItemContent.addView(rightButton)
+        // Add the horizontal layout to the vertical layout
+        mainLayout.addView(noteItemContent)
+    }
+
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         //надо создать связь между заметками и папками, куда они добавляются
         //Навреное добавлять в mainLayout не оч хорошо, так как в текущей реализации
         //он общий для всех папок
         if (requestCode == REQUEST_CODE_VOICE_ACTIVITY && resultCode == RESULT_OK) {
-            val newItemText = data?.getStringExtra("new_item_text")
-            val noteItemContent = LinearLayout(this)
-            noteItemContent.orientation = LinearLayout.HORIZONTAL
-            noteItemContent.layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            )
-
-            // Create a button on the left
-            val leftButton = Button(this)
-            leftButton.text = "▶️";
-            leftButton.layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.WRAP_CONTENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT,
-                0f
-            )
-            leftButton.gravity = Gravity.START
-            leftButton.setBackgroundColor(Color.WHITE)
-
-            // Create a button on the right
-            val rightButton = Button(this)
-            rightButton.text = "❌"
-            rightButton.layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.WRAP_CONTENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT,
-                0f
-            )
-            rightButton.gravity = Gravity.END
-            rightButton.setBackgroundColor(Color.WHITE)
-            rightButton.setOnClickListener {
-                mainLayout.removeView(noteItemContent)
-            }
-
-            // Create the title in the middle
-            val titleTextView = TextView(this)
-            titleTextView.text = newItemText
-            titleTextView.layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.WRAP_CONTENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT,
-                1f
-            )
-            titleTextView.setTextColor(Color.BLACK)
-            titleTextView.gravity = Gravity.CENTER
-
-            // Add the views to the horizontal layout
-            noteItemContent.addView(leftButton)
-            noteItemContent.addView(titleTextView)
-            noteItemContent.addView(rightButton)
-            // Add the horizontal layout to the vertical layout
-            mainLayout.addView(noteItemContent)
+            val noteName: String? = data?.getStringExtra("new_item_text")
+            addNoteInMainLayout(noteName)
         }
     }
 
@@ -112,27 +117,45 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         val storageDir = getExternalFilesDir(null)
         val newFolder = File(storageDir, folderName)
 
-        return newFolder.exists() && newFolder.mkdirs();
+        return !newFolder.exists() && newFolder.mkdirs();
+    }
+
+    private fun startDialogExistFolder() {
+        val builderExistFolder = AlertDialog.Builder(this)
+        builderExistFolder.setTitle("Папка с таким названием уже существует!")
+        builderExistFolder.setNeutralButton("Ок") { dialogExistFolder, _ ->
+            dialogExistFolder.dismiss()
+        }
+        builderExistFolder.create().show()
+    }
+
+    private fun reloadMainLayout() {
+        mainLayout.removeAllViews()
+        val currentFolderDir = getExternalFilesDir(currentFolderName)
+
+        val files = currentFolderDir?.listFiles()
+        files?.forEach { file ->
+            addNoteInMainLayout(file.name)
+        }
     }
 
     override fun onNavigationItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
-            R.id.nav_root_folder -> {
-                supportFragmentManager.beginTransaction()
-                    .replace(R.id.fragment_container, FolderNotesFragment()).commit()
-                //Надо выгрузить все аудиозаметки
+            R.id.nav_default_folder -> {
+                currentFolderName = "DefaultFolder"
+                reloadMainLayout()
                 return true
             }
 
             R.id.nav_folder1 -> {
-                supportFragmentManager.beginTransaction()
-                    .replace(R.id.fragment_container, FolderNotesFragment()).commit()
+                currentFolderName = "NewFolder"
+                reloadMainLayout()
                 return true
             }
 
             R.id.nav_folder2 -> {
-                supportFragmentManager.beginTransaction()
-                    .replace(R.id.fragment_container, FolderNotesFragment()).commit()
+                currentFolderName = "NewFolder"
+                reloadMainLayout()
                 return true
             }
 
@@ -166,20 +189,15 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                     if (createFolder(folderName)) {
                         dialogCreateFolder.dismiss()
                     } else {
-                        val builderExistFolder = AlertDialog.Builder(this)
-                        builderExistFolder.setTitle("Папка с таким названием уже существует!")
-                        builderExistFolder.setNeutralButton("Ок") { dialogExistFolder, _ ->
-                            dialogExistFolder.dismiss()
-                        }
-                        builderExistFolder.create().show()
+                        startDialogExistFolder()
                     }
                 }
                 return true
             }
 
             R.id.nav_cart -> {
-                supportFragmentManager.beginTransaction()
-                    .replace(R.id.fragment_container, FolderNotesFragment()).commit()
+                currentFolderName = "NewFolder"
+                reloadMainLayout()
                 return true
             }
         }
