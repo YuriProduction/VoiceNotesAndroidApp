@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.text.InputFilter
 import android.text.InputType
 import android.view.Gravity
+import android.view.Menu
 import android.view.MenuItem
 import android.widget.Button
 import android.widget.EditText
@@ -22,6 +23,7 @@ import java.io.File
 
 class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener {
     private lateinit var mainLayout: LinearLayout // Reference to your main vertical LinearLayout
+    private lateinit var nav_view: NavigationView
     private val REQUEST_CODE_VOICE_ACTIVITY = 1
     private var currentFolderName = "DefaultFolder"
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -29,6 +31,26 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         setContentView(R.layout.activity_main)
 
         mainLayout = findViewById(R.id.fragment_container)
+
+        nav_view = findViewById(R.id.nav_view)
+        nav_view.setNavigationItemSelectedListener(this)
+        nav_view.removeAllViews()
+
+        val storageDir = getExternalFilesDir(null)
+        println("------------------------------------")
+        println(storageDir?.name)
+        println("------------------------------------")
+        val folders = storageDir?.listFiles()
+        val menu: Menu = nav_view.getMenu()
+        folders?.forEach { folder ->
+            if (folder.isDirectory) {
+                println("--------------------")
+                println(folder.name)
+                println("--------------------")
+                menu.add(Menu.NONE, Menu.NONE, 1, folder.name)
+            }
+        }
+
 
         val buttonClick = findViewById<Button>(R.id.button_click)
         buttonClick.setOnClickListener {
@@ -41,8 +63,6 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         supportActionBar?.title = currentFolderName
 
         val drawerLayout = findViewById<DrawerLayout>(R.id.drawer_layout)
-        val navigationView = findViewById<NavigationView>(R.id.nav_view)
-        navigationView.setNavigationItemSelectedListener(this)
         val toggle = ActionBarDrawerToggle(
             this, drawerLayout, toolbar, R.string.open_nav, R.string.close_nav
         )
@@ -129,6 +149,16 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         builderExistFolder.create().show()
     }
 
+//    private fun uploadFolders() {
+//        val currentFolderDir = getExternalFilesDir(currentFolderName)
+//        val files = currentFolderDir?.listFiles()
+//        val menu: Menu = nav_view.getMenu()
+//        files?.forEach { file ->
+//            println(file.name)
+//            menu.add(Menu.NONE, Menu.NONE, 1, file.name)
+//        }
+//    }
+
     private fun reloadMainLayout() {
         mainLayout.removeAllViews()
         val currentFolderDir = getExternalFilesDir(currentFolderName)
@@ -143,18 +173,21 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         when (item.itemId) {
             R.id.nav_default_folder -> {
                 currentFolderName = "DefaultFolder"
+                supportActionBar?.title = currentFolderName
                 reloadMainLayout()
                 return true
             }
 
             R.id.nav_folder1 -> {
-                currentFolderName = "NewFolder"
+                currentFolderName = "Папка1"
+                supportActionBar?.title = currentFolderName
                 reloadMainLayout()
                 return true
             }
 
             R.id.nav_folder2 -> {
-                currentFolderName = "NewFolder"
+                currentFolderName = "Папка2"
+                supportActionBar?.title = currentFolderName
                 reloadMainLayout()
                 return true
             }
@@ -188,6 +221,8 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                     val folderName = input.text.toString()
                     if (createFolder(folderName)) {
                         dialogCreateFolder.dismiss()
+                        val menu: Menu = nav_view.getMenu()
+                        menu.add(Menu.NONE, Menu.NONE, 1, folderName)
                     } else {
                         startDialogExistFolder()
                     }
