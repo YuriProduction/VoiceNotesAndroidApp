@@ -34,7 +34,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
         nav_view = findViewById(R.id.nav_view)
         nav_view.setNavigationItemSelectedListener(this)
-        nav_view.removeAllViews()
+        nav_view.menu.clear()
 
         val storageDir = getExternalFilesDir(null)
         println("------------------------------------")
@@ -50,6 +50,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 menu.add(Menu.NONE, Menu.NONE, 1, folder.name)
             }
         }
+
 
 
         val buttonClick = findViewById<Button>(R.id.button_click)
@@ -74,17 +75,14 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         val noteItemContent = LinearLayout(this)
         noteItemContent.orientation = LinearLayout.HORIZONTAL
         noteItemContent.layoutParams = LinearLayout.LayoutParams(
-            LinearLayout.LayoutParams.MATCH_PARENT,
-            LinearLayout.LayoutParams.WRAP_CONTENT
+            LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT
         )
 
         // Create a button on the left
         val leftButton = Button(this)
         leftButton.text = "▶️";
         leftButton.layoutParams = LinearLayout.LayoutParams(
-            LinearLayout.LayoutParams.WRAP_CONTENT,
-            LinearLayout.LayoutParams.WRAP_CONTENT,
-            0f
+            LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT, 0f
         )
         leftButton.gravity = Gravity.START
         leftButton.setBackgroundColor(Color.WHITE)
@@ -93,9 +91,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         val rightButton = Button(this)
         rightButton.text = "❌"
         rightButton.layoutParams = LinearLayout.LayoutParams(
-            LinearLayout.LayoutParams.WRAP_CONTENT,
-            LinearLayout.LayoutParams.WRAP_CONTENT,
-            0f
+            LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT, 0f
         )
         rightButton.gravity = Gravity.END
         rightButton.setBackgroundColor(Color.WHITE)
@@ -107,9 +103,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         val titleTextView = TextView(this)
         titleTextView.text = noteName
         titleTextView.layoutParams = LinearLayout.LayoutParams(
-            LinearLayout.LayoutParams.WRAP_CONTENT,
-            LinearLayout.LayoutParams.WRAP_CONTENT,
-            1f
+            LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT, 1f
         )
         titleTextView.setTextColor(Color.BLACK)
         titleTextView.gravity = Gravity.CENTER
