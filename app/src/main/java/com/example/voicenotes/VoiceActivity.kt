@@ -13,6 +13,7 @@ import android.os.Environment
 import android.provider.MediaStore
 import android.text.InputFilter
 import android.text.InputType
+import android.util.Log
 import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.Toast
@@ -21,6 +22,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import org.romancha.playpause.PlayPauseView
+import java.io.File
 import java.io.IOException
 
 class VoiceActivity : AppCompatActivity() {
@@ -104,26 +106,49 @@ class VoiceActivity : AppCompatActivity() {
     }
 
     private fun startRecording() {
+//        try {
+//            mediaRecorder?.prepare()
+//            mediaRecorder?.start()
+//            state = true
+//            Toast.makeText(this, "Recording started!", Toast.LENGTH_SHORT).show()
+//        } catch (e: IllegalStateException) {
+//            e.printStackTrace()
+//        } catch (e: IOException) {
+//            e.printStackTrace()
+//        }
+        mediaRecorder = MediaRecorder()
+        mediaRecorder!!.setAudioSource(MediaRecorder.AudioSource.MIC)
+        mediaRecorder!!.setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP)
+        mediaRecorder!!.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB)
+
+        val audioDir = getExternalFilesDir(Environment.DIRECTORY_MUSIC) // Get app-specific directory
+        val audioFile = File.createTempFile("record", ".3gp", audioDir) // Create a temporary file
+
+        val audioFilePath = audioFile.absolutePath // Save the file path for later use
+        mediaRecorder!!.setOutputFile(audioFilePath)
+
         try {
-            mediaRecorder?.prepare()
-            mediaRecorder?.start()
+            mediaRecorder!!.prepare()
+            mediaRecorder!!.start()
             state = true
-            Toast.makeText(this, "Recording started!", Toast.LENGTH_SHORT).show()
-        } catch (e: IllegalStateException) {
-            e.printStackTrace()
+            // Update the UI or button here if required
         } catch (e: IOException) {
-            e.printStackTrace()
+            Log.e("AudioRecording", "prepare() failed")
         }
     }
 
 
     private fun stopRecording() {
-        if (state) {
-            mediaRecorder?.stop()
-            mediaRecorder?.release()
+        try {
+            mediaRecorder?.apply {
+                stop()
+                reset()
+                release()
+            }
             state = false
-        } else {
-            Toast.makeText(this, "You are not recording right now!", Toast.LENGTH_SHORT).show()
+            // Update the UI or button here if required
+        } catch (e: Exception) {
+            Log.e("AudioRecording", "stopRecording() failed")
         }
     }
 
