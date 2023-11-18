@@ -2,6 +2,7 @@ package com.example.voicenotes
 
 import android.content.Intent
 import android.graphics.Color
+import android.media.MediaPlayer
 import android.os.Bundle
 import android.text.InputFilter
 import android.text.InputType
@@ -52,7 +53,6 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         }
 
 
-
         val buttonClick = findViewById<Button>(R.id.button_click)
         buttonClick.setOnClickListener {
             val intent = Intent(this, VoiceActivity::class.java)
@@ -80,7 +80,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
         // Create a button on the left
         val leftButton = Button(this)
-        leftButton.text = "▶️";
+        leftButton.text = "▶️"
         leftButton.layoutParams = LinearLayout.LayoutParams(
             LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT, 0f
         )
@@ -95,9 +95,6 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         )
         rightButton.gravity = Gravity.END
         rightButton.setBackgroundColor(Color.WHITE)
-        rightButton.setOnClickListener {
-            mainLayout.removeView(noteItemContent)
-        }
 
         // Create the title in the middle
         val titleTextView = TextView(this)
@@ -107,6 +104,36 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         )
         titleTextView.setTextColor(Color.BLACK)
         titleTextView.gravity = Gravity.CENTER
+        rightButton.setOnClickListener {
+            val folderPath = getExternalFilesDir("Study") //конкретная папка
+            val fileName = titleTextView.text.toString()
+            val file = File(folderPath, "$fileName.3gp")
+            if (file.exists()) {
+                file.delete()
+                println("Файл $fileName.3gp успешно удален из папки $folderPath")
+            } else {
+                println("Файл $fileName.3gp не найден в папке $folderPath")
+            }
+            mainLayout.removeView(noteItemContent)
+        }
+        leftButton.setOnClickListener {
+            if (leftButton.text.toString() == "▶️") {
+                if (isStopped) {
+                    resumeAudio()
+                } else {
+                    playAudio(
+                        titleTextView.text.toString(),
+                        getExternalFilesDir("Study"),
+                        leftButton
+                    )
+                }
+                leftButton.text = "⏸️"
+            } else {
+                isStopped = true
+                stopAudio()
+                leftButton.text = "▶️"
+            }
+        }
 
         // Add the views to the horizontal layout
         noteItemContent.addView(leftButton)
@@ -114,6 +141,51 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         noteItemContent.addView(rightButton)
         // Add the horizontal layout to the vertical layout
         mainLayout.addView(noteItemContent)
+    }
+
+    private var isStopped = false
+
+    private lateinit var mediaPlayer: MediaPlayer
+
+    // Функция для остановки воспроизведения аудио
+    private fun stopAudio() {
+        mediaPlayer?.apply {
+            if (isPlaying) {
+                pause() // Приостанавливаем воспроизведение
+            }
+        }
+    }
+
+    // Функция для продолжения прослушивания аудио
+    private fun resumeAudio() {
+        mediaPlayer?.apply {
+            if (!isPlaying) {
+                start() // Возобновляем воспроизведение
+            }
+        }
+    }
+
+
+    private fun playAudio(audioFileName: String, audioDir: File?, button: Button) {
+        val audioFilePath = File(audioDir, "$audioFileName.3gp").absolutePath
+
+        mediaPlayer = MediaPlayer()
+
+        try {
+            mediaPlayer.setDataSource(audioFilePath) // Устанавливаем источник аудиоданных из файла
+            mediaPlayer.prepare() // Подготавливаем медиаплеер
+            mediaPlayer.start() // Запускаем воспроизведение
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+
+        // Обрабатываем окончание воспроизведения
+        mediaPlayer.setOnCompletionListener {
+            // Освобождаем ресурсы медиаплеера после окончания воспроизведения
+            mediaPlayer.release()
+            button.text = "▶️"
+            isStopped = false
+        }
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {

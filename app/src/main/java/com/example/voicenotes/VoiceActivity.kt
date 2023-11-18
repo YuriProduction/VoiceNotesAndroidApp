@@ -30,7 +30,6 @@ class VoiceActivity : AppCompatActivity() {
     private var output: String? = null
     private var mediaRecorder: MediaRecorder? = null
     private var state: Boolean = false
-    private var recordingStopped: Boolean = false
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.voice_activity)
@@ -50,11 +49,9 @@ class VoiceActivity : AppCompatActivity() {
             playPauseView.toggle()
             if (playPauseView.onPlaying()) {
                 if (ContextCompat.checkSelfPermission(
-                        this,
-                        android.Manifest.permission.RECORD_AUDIO
+                        this, android.Manifest.permission.RECORD_AUDIO
                     ) != PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(
-                        this,
-                        android.Manifest.permission.WRITE_EXTERNAL_STORAGE
+                        this, android.Manifest.permission.WRITE_EXTERNAL_STORAGE
                     ) != PackageManager.PERMISSION_GRANTED
                 ) {
                     val permissions = arrayOf(
@@ -64,12 +61,6 @@ class VoiceActivity : AppCompatActivity() {
                     )
                     ActivityCompat.requestPermissions(this, permissions, 0)
                 } else {
-                    for (i in 1..100)
-                    {
-                        println("------------------------")
-                        println("Recording...............")
-                        println("------------------------")
-                    }
                     startRecording()
                 }
             } else {
@@ -96,6 +87,19 @@ class VoiceActivity : AppCompatActivity() {
                     intent.putExtra("new_item_text", newItemText)
                     setResult(RESULT_OK, intent)
                     finish()
+                    val audioDir = getExternalFilesDir("Study")
+                    val oldFile = File(audioDir, "record.3gp") // Указываем старое имя файла
+                    val newFile =
+                        File(audioDir, "$enteredText.3gp") // Создаем новый файл с новым именем
+                    if (oldFile.exists()) {
+                        val isSuccess = oldFile.renameTo(newFile)
+                        if (isSuccess) {
+                            Log.d("AudioRecording", "File renamed successfully")
+                        } else {
+                            Log.e("AudioRecording", "File rename failed")
+                        }
+                    }
+
                     dialog.dismiss()
                 }
                 // Показать диалоговое окно
@@ -106,23 +110,13 @@ class VoiceActivity : AppCompatActivity() {
     }
 
     private fun startRecording() {
-//        try {
-//            mediaRecorder?.prepare()
-//            mediaRecorder?.start()
-//            state = true
-//            Toast.makeText(this, "Recording started!", Toast.LENGTH_SHORT).show()
-//        } catch (e: IllegalStateException) {
-//            e.printStackTrace()
-//        } catch (e: IOException) {
-//            e.printStackTrace()
-//        }
         mediaRecorder = MediaRecorder()
         mediaRecorder!!.setAudioSource(MediaRecorder.AudioSource.MIC)
         mediaRecorder!!.setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP)
         mediaRecorder!!.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB)
-
-        val audioDir = getExternalFilesDir(Environment.DIRECTORY_MUSIC) // Get app-specific directory
-        val audioFile = File.createTempFile("record", ".3gp", audioDir) // Create a temporary file
+        val fileName = "record.3gp"
+        val audioDir = getExternalFilesDir("Study") // Get app-specific directory
+        val audioFile = File(audioDir, fileName) // Create a temporary file
 
         val audioFilePath = audioFile.absolutePath // Save the file path for later use
         mediaRecorder!!.setOutputFile(audioFilePath)
