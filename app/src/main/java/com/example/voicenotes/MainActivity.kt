@@ -4,17 +4,12 @@ import android.content.Intent
 import android.graphics.Color
 import android.media.MediaPlayer
 import android.os.Bundle
-import android.text.InputFilter
-import android.text.InputType
 import android.view.Gravity
-import android.view.Menu
 import android.view.MenuItem
 import android.widget.Button
-import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.appcompat.app.ActionBarDrawerToggle
-import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import androidx.drawerlayout.widget.DrawerLayout
@@ -23,35 +18,24 @@ import java.io.File
 
 
 class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener {
-    private lateinit var mainLayout: LinearLayout // Reference to your main vertical LinearLayout
-    private lateinit var nav_view: NavigationView
+    private lateinit var drawerLayout: DrawerLayout
+    private lateinit var mainLayout: LinearLayout
+    private lateinit var navView: NavigationView
+    private var foldersManager: FoldersManager = FoldersManager()
     private val REQUEST_CODE_VOICE_ACTIVITY = 1
     private var currentFolderName = "DefaultFolder"
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
         mainLayout = findViewById(R.id.fragment_container)
 
-        nav_view = findViewById(R.id.nav_view)
-        nav_view.setNavigationItemSelectedListener(this)
-        nav_view.menu.clear()
+        navView = findViewById(R.id.nav_view)
+        navView.setNavigationItemSelectedListener(this)
+        navView.menu.clear()
 
-        val storageDir = getExternalFilesDir(null)
-        println("------------------------------------")
-        println(storageDir?.name)
-        println("------------------------------------")
-        val folders = storageDir?.listFiles()
-        val menu: Menu = nav_view.getMenu()
-        folders?.forEach { folder ->
-            if (folder.isDirectory) {
-                println("--------------------")
-                println(folder.name)
-                println("--------------------")
-                menu.add(Menu.NONE, Menu.NONE, 1, folder.name)
-            }
-        }
-
+        foldersManager.uploadFolders(this, navView)
 
         val buttonClick = findViewById<Button>(R.id.button_click)
         buttonClick.setOnClickListener {
@@ -63,7 +47,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         setSupportActionBar(toolbar)
         supportActionBar?.title = currentFolderName
 
-        val drawerLayout = findViewById<DrawerLayout>(R.id.drawer_layout)
+        drawerLayout = findViewById(R.id.drawer_layout)
         val toggle = ActionBarDrawerToggle(
             this, drawerLayout, toolbar, R.string.open_nav, R.string.close_nav
         )
@@ -165,7 +149,6 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         }
     }
 
-
     private fun playAudio(audioFileName: String, audioDir: File?, button: Button) {
         val audioFilePath = File(audioDir, "$audioFileName.3gp").absolutePath
 
@@ -199,32 +182,6 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         }
     }
 
-    private fun createFolder(folderName: String): Boolean {
-        val storageDir = getExternalFilesDir(null)
-        val newFolder = File(storageDir, folderName)
-
-        return !newFolder.exists() && newFolder.mkdirs();
-    }
-
-    private fun startDialogExistFolder() {
-        val builderExistFolder = AlertDialog.Builder(this)
-        builderExistFolder.setTitle("Папка с таким названием уже существует!")
-        builderExistFolder.setNeutralButton("Ок") { dialogExistFolder, _ ->
-            dialogExistFolder.dismiss()
-        }
-        builderExistFolder.create().show()
-    }
-
-//    private fun uploadFolders() {
-//        val currentFolderDir = getExternalFilesDir(currentFolderName)
-//        val files = currentFolderDir?.listFiles()
-//        val menu: Menu = nav_view.getMenu()
-//        files?.forEach { file ->
-//            println(file.name)
-//            menu.add(Menu.NONE, Menu.NONE, 1, file.name)
-//        }
-//    }
-
     private fun reloadMainLayout() {
         mainLayout.removeAllViews()
         val currentFolderDir = getExternalFilesDir(currentFolderName)
@@ -236,73 +193,14 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     }
 
     override fun onNavigationItemSelected(item: MenuItem): Boolean {
-        when (item.itemId) {
-            R.id.nav_default_folder -> {
-                currentFolderName = "DefaultFolder"
-                supportActionBar?.title = currentFolderName
-                reloadMainLayout()
-                return true
-            }
-
-            R.id.nav_folder1 -> {
-                currentFolderName = "Папка1"
-                supportActionBar?.title = currentFolderName
-                reloadMainLayout()
-                return true
-            }
-
-            R.id.nav_folder2 -> {
-                currentFolderName = "Папка2"
-                supportActionBar?.title = currentFolderName
-                reloadMainLayout()
-                return true
-            }
-
-            R.id.nav_add_folder -> {
-                val builderCreateFolder = AlertDialog.Builder(this)
-                builderCreateFolder.setTitle("Введите название папки")
-
-                // Создать поле ввода текста
-                val input = EditText(this)
-                input.inputType = InputType.TYPE_CLASS_TEXT
-                input.filters =
-                    arrayOf(InputFilter.LengthFilter(40)) // Максимальная длина 40 символов
-                builderCreateFolder.setView(input)
-
-                // Установить кнопку "Отмена"
-                builderCreateFolder.setNegativeButton("Отмена") { dialogCreateFolder, _ ->
-                    dialogCreateFolder.cancel()
-                }
-
-                // Установить кнопку "Ок" без закрытия окна
-                builderCreateFolder.setPositiveButton("Ок", null)
-
-                // Показать диалоговое окно
-                val dialogCreateFolder = builderCreateFolder.create()
-                dialogCreateFolder.show()
-
-                // Получить ссылку на кнопку "Ок" и установить слушатель
-                val okButton = dialogCreateFolder.getButton(AlertDialog.BUTTON_POSITIVE)
-                okButton.setOnClickListener {
-                    val folderName = input.text.toString()
-                    if (createFolder(folderName)) {
-                        dialogCreateFolder.dismiss()
-                        val menu: Menu = nav_view.getMenu()
-                        menu.add(Menu.NONE, Menu.NONE, 1, folderName)
-                    } else {
-                        startDialogExistFolder()
-                    }
-                }
-                return true
-            }
-
-            R.id.nav_cart -> {
-                currentFolderName = "NewFolder"
-                reloadMainLayout()
-                return true
-            }
+        if (item.title == "Добавить папку") {
+            foldersManager.handleNewFolderButton(this, navView)
+        } else {
+            currentFolderName = item.title.toString()
+            supportActionBar?.title = currentFolderName
+            reloadMainLayout()
+            drawerLayout.closeDrawers()
         }
         return false
     }
-
 }
