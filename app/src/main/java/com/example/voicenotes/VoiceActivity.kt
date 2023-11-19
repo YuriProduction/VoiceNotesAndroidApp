@@ -30,11 +30,12 @@ class VoiceActivity : AppCompatActivity() {
     private var output: String? = null
     private var mediaRecorder: MediaRecorder? = null
     private var state: Boolean = false
+    private var currentFolderName: String? = null
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.voice_activity)
         val playPauseView = findViewById<PlayPauseView>(R.id.play_pause_view)
-
+        currentFolderName = intent.getStringExtra("currentFolderName")
         mediaRecorder = MediaRecorder()
         output = Environment.getExternalStorageDirectory().absolutePath + "/recording.mp3"
 
@@ -87,7 +88,7 @@ class VoiceActivity : AppCompatActivity() {
                     intent.putExtra("new_item_text", newItemText)
                     setResult(RESULT_OK, intent)
                     finish()
-                    val audioDir = getExternalFilesDir("Study")
+                    val audioDir = getExternalFilesDir(currentFolderName)
                     val oldFile = File(audioDir, "record.3gp") // Указываем старое имя файла
                     val newFile =
                         File(audioDir, "$enteredText.3gp") // Создаем новый файл с новым именем
@@ -115,7 +116,10 @@ class VoiceActivity : AppCompatActivity() {
         mediaRecorder!!.setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP)
         mediaRecorder!!.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB)
         val fileName = "record.3gp"
-        val audioDir = getExternalFilesDir("Study") // Get app-specific directory
+        println("------------------------------")
+        println(currentFolderName)
+        println("------------------------------")
+        val audioDir = getExternalFilesDir(currentFolderName) // Get app-specific directory
         val audioFile = File(audioDir, fileName) // Create a temporary file
 
         val audioFilePath = audioFile.absolutePath // Save the file path for later use

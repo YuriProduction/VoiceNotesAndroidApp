@@ -36,10 +36,11 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         navView.menu.clear()
 
         foldersManager.uploadFolders(this, navView)
-
+        reloadMainLayout()
         val buttonClick = findViewById<Button>(R.id.button_click)
         buttonClick.setOnClickListener {
             val intent = Intent(this, VoiceActivity::class.java)
+            intent.putExtra("currentFolderName", currentFolderName)
             startActivityForResult(intent, REQUEST_CODE_VOICE_ACTIVITY)
         }
 
@@ -89,7 +90,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         titleTextView.setTextColor(Color.BLACK)
         titleTextView.gravity = Gravity.CENTER
         rightButton.setOnClickListener {
-            val folderPath = getExternalFilesDir("Study") //конкретная папка
+            val folderPath = getExternalFilesDir(currentFolderName) //конкретная папка
             val fileName = titleTextView.text.toString()
             val file = File(folderPath, "$fileName.3gp")
             if (file.exists()) {
@@ -105,9 +106,10 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 if (isStopped) {
                     resumeAudio()
                 } else {
+                    println(titleTextView.text.toString())
                     playAudio(
                         titleTextView.text.toString(),
-                        getExternalFilesDir("Study"),
+                        getExternalFilesDir(currentFolderName),
                         leftButton
                     )
                 }
@@ -188,7 +190,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
         val files = currentFolderDir?.listFiles()
         files?.forEach { file ->
-            addNoteInMainLayout(file.name)
+            addNoteInMainLayout(file.name.substring(0, file.name.length - 4))
         }
     }
 
