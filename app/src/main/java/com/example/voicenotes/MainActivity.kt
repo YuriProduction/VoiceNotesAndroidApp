@@ -1,7 +1,9 @@
 package com.example.voicenotes
 
+import android.annotation.SuppressLint
 import android.content.Intent
 import android.graphics.Color
+import android.media.MediaMetadataRetriever
 import android.media.MediaPlayer
 import android.os.Bundle
 import android.view.Gravity
@@ -15,6 +17,10 @@ import androidx.appcompat.widget.Toolbar
 import androidx.drawerlayout.widget.DrawerLayout
 import com.google.android.material.navigation.NavigationView
 import java.io.File
+import java.text.SimpleDateFormat
+import java.util.Date
+import kotlin.time.DurationUnit
+import kotlin.time.toDuration
 
 
 class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener {
@@ -56,7 +62,27 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         toggle.syncState()
     }
 
-    private fun addNoteInMainLayout(noteName: String?) {
+    @SuppressLint("SimpleDateFormat")
+    private fun getDateFile(file: File): String {
+        val sdf = SimpleDateFormat("dd.MM.yy")
+        return sdf.format(Date(file.lastModified()))
+    }
+
+    private fun getDurationFile(file: File): String {
+        val mmr = MediaMetadataRetriever();
+        mmr.setDataSource(file.path)
+        val durationString = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)
+        val durationLong = durationString?.toLong()
+        return durationLong?.toDuration(DurationUnit.MILLISECONDS).toString()
+    }
+
+    private fun addNoteInMainLayout(file: File) {
+        val noteName = file.name.substring(0, file.name.length - 4)
+
+        val dateFile = getDateFile(file)
+
+        val duration = getDurationFile(file)
+
         val noteItemContent = LinearLayout(this)
         noteItemContent.orientation = LinearLayout.HORIZONTAL
         noteItemContent.layoutParams = LinearLayout.LayoutParams(
@@ -70,6 +96,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT, 0f
         )
         leftButton.gravity = Gravity.START
+        leftButton.setPadding(leftButton.paddingLeft + 8, leftButton.paddingTop, leftButton.paddingRight, leftButton.paddingBottom)
         leftButton.setBackgroundColor(Color.WHITE)
 
         // Create a button on the right
@@ -79,7 +106,26 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT, 0f
         )
         rightButton.gravity = Gravity.END
+        rightButton.setPadding(leftButton.paddingLeft, leftButton.paddingTop, leftButton.paddingRight + 8, leftButton.paddingBottom)
         rightButton.setBackgroundColor(Color.WHITE)
+
+        // Create dateFile text
+        val dateFileTextView = TextView(this)
+        dateFileTextView.text = dateFile
+        dateFileTextView.layoutParams = LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT, 1f
+        )
+        dateFileTextView.setTextColor(Color.BLACK)
+        dateFileTextView.gravity = Gravity.CENTER
+
+        // Create duration text
+        val durationTextView = TextView(this)
+        durationTextView.text = duration
+        durationTextView.layoutParams = LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT, 1f
+        )
+        durationTextView.setTextColor(Color.BLACK)
+        durationTextView.gravity = Gravity.CENTER
 
         // Create the title in the middle
         val titleTextView = TextView(this)
@@ -123,6 +169,8 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
         // Add the views to the horizontal layout
         noteItemContent.addView(leftButton)
+        noteItemContent.addView(dateFileTextView)
+        noteItemContent.addView(durationTextView)
         noteItemContent.addView(titleTextView)
         noteItemContent.addView(rightButton)
         // Add the horizontal layout to the vertical layout
@@ -180,7 +228,10 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         //он общий для всех папок
         if (requestCode == REQUEST_CODE_VOICE_ACTIVITY && resultCode == RESULT_OK) {
             val noteName: String? = data?.getStringExtra("new_item_text")
-            addNoteInMainLayout(noteName)
+            val currentFolderDir = getExternalFilesDir(currentFolderName)
+            val pathToFile = currentFolderDir.toString() + "/" + noteName + ".3gp"
+            val file = File(pathToFile)
+            addNoteInMainLayout(file)
         }
     }
 
@@ -190,12 +241,12 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
         val files = currentFolderDir?.listFiles()
         files?.forEach { file ->
-            addNoteInMainLayout(file.name.substring(0, file.name.length - 4))
+            addNoteInMainLayout(file)
         }
     }
 
     override fun onNavigationItemSelected(item: MenuItem): Boolean {
-        if (item.title == "Добавить папку") {
+        if (item.itemId == 1) {
             foldersManager.handleNewFolderButton(this, navView)
         } else {
             currentFolderName = item.title.toString()

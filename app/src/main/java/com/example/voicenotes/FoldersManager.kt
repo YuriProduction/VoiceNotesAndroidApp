@@ -1,8 +1,10 @@
 package com.example.voicenotes
 
+import android.annotation.SuppressLint
 import android.text.InputFilter
 import android.text.InputType
 import android.view.Menu
+import android.widget.Button
 import android.widget.EditText
 import androidx.appcompat.app.AlertDialog
 import com.google.android.material.navigation.NavigationView
@@ -10,18 +12,31 @@ import java.io.File
 
 class FoldersManager {
 
+    @SuppressLint("ResourceType")
     fun uploadFolders(mainActivity: MainActivity, navView: NavigationView) {
         val storageDir = mainActivity.getExternalFilesDir(null)
         val folders = storageDir?.listFiles()
         val menu: Menu = navView.menu
         folders?.forEach { folder ->
-            addFolderButton(menu, 0, folder.name)
+            addFolderButton(menu, folder.name)
         }
-        addFolderButton(menu, 1, "Добавить папку")
+
+        addNewFolderButton(menu, mainActivity, navView)
     }
 
-    private fun addFolderButton(menu: Menu, orderInCategory: Int, folderName: String) {
-        menu.add(Menu.NONE, Menu.NONE, orderInCategory, folderName)
+    private fun addNewFolderButton(menu: Menu, mainActivity: MainActivity, navView: NavigationView) {
+        // Кнопка добавления папки
+        val button = Button(mainActivity)
+        button.text = "+"
+        button.textSize = 20F
+        button.width = 1000
+        button.setBackgroundColor(0xFF4CAF50.toInt())
+        button.setOnClickListener { handleNewFolderButton(mainActivity, navView) }
+        menu.add(Menu.NONE, 1, 1, "").actionView = button
+    }
+
+    private fun addFolderButton(menu: Menu, folderName: String) {
+        menu.add(Menu.NONE, Menu.NONE, 0, folderName)
     }
 
     fun handleNewFolderButton(mainActivity: MainActivity, navView: NavigationView) {
@@ -53,7 +68,7 @@ class FoldersManager {
             val folderName = input.text.toString()
             if (createFolder(mainActivity, folderName)) {
                 dialogCreateFolder.dismiss()
-                addFolderButton(navView.menu, 0, folderName)
+                addFolderButton(navView.menu, folderName)
             } else {
                 startDialogExistFolder(mainActivity)
             }
