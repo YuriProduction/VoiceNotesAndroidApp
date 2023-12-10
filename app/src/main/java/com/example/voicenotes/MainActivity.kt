@@ -1,6 +1,7 @@
 package com.example.voicenotes
 
 import android.annotation.SuppressLint
+import android.content.DialogInterface
 import android.content.Intent
 import android.graphics.Color
 import android.media.MediaMetadataRetriever
@@ -12,6 +13,7 @@ import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.appcompat.app.ActionBarDrawerToggle
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import androidx.drawerlayout.widget.DrawerLayout
@@ -96,7 +98,12 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT, 0f
         )
         leftButton.gravity = Gravity.START
-        leftButton.setPadding(leftButton.paddingLeft + 8, leftButton.paddingTop, leftButton.paddingRight, leftButton.paddingBottom)
+        leftButton.setPadding(
+            leftButton.paddingLeft + 8,
+            leftButton.paddingTop,
+            leftButton.paddingRight,
+            leftButton.paddingBottom
+        )
         leftButton.setBackgroundColor(Color.WHITE)
 
         // Create a button on the right
@@ -106,7 +113,12 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT, 0f
         )
         rightButton.gravity = Gravity.END
-        rightButton.setPadding(leftButton.paddingLeft, leftButton.paddingTop, leftButton.paddingRight + 8, leftButton.paddingBottom)
+        rightButton.setPadding(
+            leftButton.paddingLeft,
+            leftButton.paddingTop,
+            leftButton.paddingRight + 8,
+            leftButton.paddingBottom
+        )
         rightButton.setBackgroundColor(Color.WHITE)
 
         // Create dateFile text
@@ -136,16 +148,37 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         titleTextView.setTextColor(Color.BLACK)
         titleTextView.gravity = Gravity.CENTER
         rightButton.setOnClickListener {
-            val folderPath = getExternalFilesDir(currentFolderName) //конкретная папка
-            val fileName = titleTextView.text.toString()
-            val file = File(folderPath, "$fileName.3gp")
-            if (file.exists()) {
-                file.delete()
-                println("Файл $fileName.3gp успешно удален из папки $folderPath")
-            } else {
-                println("Файл $fileName.3gp не найден в папке $folderPath")
-            }
-            mainLayout.removeView(noteItemContent)
+            val dialogBuilder = AlertDialog.Builder(this)
+
+            // Устанавливаем сообщение окна
+            dialogBuilder.setMessage("Вы уверены, что хотите удалить аудиофайл?")
+
+            // Добавляем кнопку "ОК" и устанавливаем обработчик
+            dialogBuilder.setPositiveButton("OK",
+                DialogInterface.OnClickListener { dialog, which ->
+                    val folderPath = getExternalFilesDir(currentFolderName) //конкретная папка
+                    val fileName = titleTextView.text.toString()
+                    val file = File(folderPath, "$fileName.3gp")
+                    if (file.exists()) {
+                        file.delete()
+                        println("Файл $fileName.3gp успешно удален из папки $folderPath")
+                    } else {
+                        println("Файл $fileName.3gp не найден в папке $folderPath")
+                    }
+                    mainLayout.removeView(noteItemContent)
+                    // Здесь ты можешь добавить код для удаления аудиофайла
+                    dialog.dismiss() // закрываем диалоговое окно
+                })
+
+            // Добавляем кнопку "Отмена" и устанавливаем обработчик
+            dialogBuilder.setNegativeButton("Отмена",
+                DialogInterface.OnClickListener { dialog, which ->
+                    dialog.dismiss() // закрываем диалоговое окно
+                })
+
+            val dialog = dialogBuilder.create()
+            dialog.show()
+
         }
         leftButton.setOnClickListener {
             if (leftButton.text.toString() == "▶️") {
